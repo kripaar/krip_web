@@ -1,41 +1,26 @@
-class BaseResponse:
-    def __init__(self):
-        self.app = None  # Given at app.App.__process_response
-        self.content_type = b""  #
-        self.body = b""
-
-    def get_resp_head(self):
-        return {
+def _to_head(content_type):
+    return {
             'type': 'http.response.start',
             'status': 200,
             'headers': [
-                [b'content-type', self.content_type],
+                [b'content-type', content_type],
             ]
         }
 
-    def get_resp_body(self):
-        return {
+
+def _to_body(body):
+    return {
             'type': 'http.response.body',
-            'body': self.body,
+            'body': body,
         }
 
 
-class ImageResponse(BaseResponse):
-    def __init__(self, filepath: str, use_static_path=True):
-        super().__init__()
-        self.content_type = f'image/{self.fp.split(".")[-1]}'.encode()
-        self.body = open(self.app.static_path + filepath if use_static_path else filepath, 'rb').read()
+class Response:
+    def __init__(self, content_type: bytes, app=None, encode=True):
+        self.app = app
+        self.head = _to_head(content_type)
+        self.encode = encode
 
-
-class TextResponse(BaseResponse):
-    def __init__(self, text: str):
-        super().__init__()
-        self.content_type = b'text/plain'
-        self.body = text.encode()
-
-
-class HTMLResponse(BaseResponse):
-    def __init__(self, code):
-        super().__init__()
-        self.content_type = b'text/html'
-        self.body = code.encode()
+    def __call__(self, body: (bytes or str)):
+        self.body = _to_body(body.encode()) if self.encode else _to_body(body)
+        return self

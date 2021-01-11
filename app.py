@@ -1,8 +1,11 @@
+from jinja2 import Environment, FileSystemLoader
+
+
 class App:
     def __init__(self):
         self.routes = {}
-        self.static_path = "static/"
-        self.template_path = "template/"
+        template_path = "template"
+        self.jinja2_env = Environment(loader=FileSystemLoader(template_path))
 
     async def __call__(self, scope, receive, send):
         things = Things(scope, receive, send)
@@ -16,9 +19,8 @@ class App:
         return decorator
 
     async def __process_response(self, response, things):
-        response.app = self
-        await things.send(response.get_resp_head())
-        await things.send(response.get_resp_body())
+        await things.send(response.head)
+        await things.send(response.body)
 
 
 class Things:

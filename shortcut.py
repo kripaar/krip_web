@@ -1,9 +1,4 @@
-from .response import HTMLResponse
-
-
-class Shortcut:
-    def __init__(self, app):
-        self.app = app
-
-    def render(self, filepath, use_template_path=True):
-        return HTMLResponse(open(self.app.template_path + filepath if use_template_path else filepath).read())
+def Render(app, HTMLResponse):
+    def to_render(filepath, **variables):
+        return HTMLResponse(app.jinja2_env.get_template(filepath).render(**variables))
+    return to_render
