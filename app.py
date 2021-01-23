@@ -3,17 +3,17 @@ from jinja2 import Environment, FileSystemLoader
 
 class App:
     def __init__(self, template_path="template"):
-        self.routes = {}
         self.template_path = template_path
         self.jinja2_env = Environment(loader=FileSystemLoader(self.template_path))
         self.request_required_on_default_if_received_such_requests_types = ["POST"]
+        self._routes = {}
 
     async def __call__(self, scope, receive, send):
         things = Things(scope, receive, send)
         if scope["type"] == "http":
-            if scope["path"] in self.routes:
-                if scope["method"] in self.routes[scope["path"]]:
-                    the_long_thing = self.routes[scope["path"]][scope["method"]]
+            if scope["path"] in self._routes:
+                if scope["method"] in self._routes[scope["path"]]:
+                    the_long_thing = self._routes[scope["path"]][scope["method"]]
                     await things.set_request_post_form()
 
                     things_to_give_view = []
@@ -21,16 +21,18 @@ class App:
                     await self.__process_response(await the_long_thing["function"](*things_to_give_view), things)
 
     def route(self, path, method="get", i_want_request=None):
+        """TODO: Use kripfunc.commander instead so that a nested url tree and names can be done"""
         def decorator(f):
-            if self.routes.get(path) is None:
-                self.routes[path] = {}
-            self.routes[path][method.upper()] = {"function": f, "request_required": i_want_request or ((method.upper() in self.request_required_on_default_if_received_such_requests_types) if i_want_request is None else False)}
-            # i_want_request: True if request is NEEDED, False if request is NOT NEEDED (even when you're receiving a POST request), None if you just go on default
+            if self._routes.get(path) is None:
+                self._routes[path] = {}
+            self._routes[path][method.upper()] = {"function": f, "request_required": i_want_request or ((method.upper() in self.request_required_on_default_if_received_such_requests_types) if i_want_request is None else False)}
+            # FOR PROGRAMMERS:  # i_want_request: True if request is NEEDED, False if request is NOT NEEDED (even when you're receiving a POST request), None if you just go on default
         return decorator
 
     async def __process_response(self, response, things):
         await things.send(response.head)
         await things.send(response.body)
+        response.afterthat_function()
 
 
 class Things:
