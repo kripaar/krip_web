@@ -21,12 +21,10 @@ class App:
                     await self.__process_response(await the_long_thing["function"](*things_to_give_view), things)
 
     def route(self, path, method="get", i_want_request=None):
-        """TODO: Use kripfunc.commander instead so that a nested url tree and names can be done"""
         def decorator(f):
             if self._routes.get(path) is None:
                 self._routes[path] = {}
             self._routes[path][method.upper()] = {"function": f, "request_required": i_want_request or ((method.upper() in self.request_required_on_default_if_received_such_requests_types) if i_want_request is None else False)}
-            # FOR PROGRAMMERS:  # i_want_request: True if request is NEEDED, False if request is NOT NEEDED (even when you're receiving a POST request), None if you just go on default
         return decorator
 
     async def __process_response(self, response, things):
