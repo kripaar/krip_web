@@ -11,8 +11,6 @@ class App:
 
         self.jinja2_env = Environment(loader=FileSystemLoader(self.template_path))
         self.request_required_on_default_if_received_such_requests_types = ["POST"]
-        # self._routes = {}  # {"route": {"GET": {"function": f, "requesat_required": <bool>},"POST": (...)}}
-        # self._error_pages = {}  # {code: {"function": f, "requesat_required": <bool>}}
         self._routes = Route(route_call_name_splitter, route_url_name_splitter)
 
         self.jinja2_env.globals["url_for"] = self.__get_static_file_url
@@ -20,44 +18,39 @@ class App:
     async def __call__(self, scope, receive, send):
         things = Things(scope, receive, send)
         await things.set_request_post_form()
-        response = None
-
-        # if scope["type"] == "http":
-        #     if scope["path"] in self._routes:
-        #         if scope["method"] in self._routes[scope["path"]]:
-        #             the_long_thing = self._routes[scope["path"]][scope["method"]]
-        #         elif scope["method"] != "GET" and self._routes.get("GET") is not None:
-        #             the_long_thing = self._routes[scope["path"]]["GET"]
-        #         else:
-        #             the_long_thing = self._error_pages[404]
-        #
-        #     elif scope["path"].split("/")[1] == self.static_url:
-        #         async def get_static():
-        #             return FileResponse()(open(scope["path"][1:], "rb"), "")
-        #         the_long_thing = {"function": get_static, "request_required": False}
-        #
-        #     else:
-        #         the_long_thing = self._error_pages[404]
-
-
-            # things_to_give_view = []
-            # if the_long_thing["request_required"]: things_to_give_view.append(things.request)
-            # response = await the_long_thing["function"](*things_to_give_view)
-
-        await self.__process_response(response, things)
+        if scope["type"] == "http":
+            if node := self._routes.get_node(scope["path"], "url"):
+                if (method := scope["method"]) in node.page:
+                    view = node.page.get_view(method)
+                    to_give_view = {}
+                    if view.request_required or (view.request_required is None and method in self.request_required_on_default_if_received_such_requests_types):
+                        to_give_view["request"] = things.request
+                    response = await view.function(**to_give_view)
+                    await self.__process_response(response, things)
 
     def route(self, new_path, name, method="get", i_want_request=None):
         def decorator(f):
             # if self._routes.get(path) is None:
             #     self._routes[path] = {}
             # self._routes[path][method.upper()] = {"function": f, "request_required": i_want_request or ((method.upper() in self.request_required_on_default_if_received_such_requests_types) if i_want_request is None else False)}
+            if node := self._routes.get_node(name, "call"):
+                node.page.make_view(f, method, i_want_request)
+            else:
+                if new_path.find("/") == 0:
+                    path = new_path[1:]
+                else:
+                    path = new_path
+                parent_call = self._routes.get_parent_name_of(name, "call")
+                page = Page().make_view(f, method, i_want_request)
+                node = Node(self._routes.get_childest_name_of(name), path, page)
+                self._routes.add_note_to(parent_call, "call", node)
 
         return decorator
 
-    def error_handler(self, error_status_code=404, request_required=False):
-        def decorator(f):
-            self._error_pages[error_status_code] = {"function": f, "request_required": request_required}
-        return decorator
+    # def error_handler(self, error_status_code=404, request_required=False):
+    #     def decorator(f):
+    #         self._error_pages[error_status_code] = {"function": f, "request_required": request_required}
+    #     return decorator
 
     def __get_static_file_url(self, fp):
         return self.static_url + "/" + fp
@@ -66,7 +59,6 @@ class App:
         await things.send(response.head)
         await things.send(response.body)
         response.afterthat_function()
-
 
 
 class Things:

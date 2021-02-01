@@ -3,14 +3,23 @@ class Route:
         self.route = {}
         self.splitters = {"call": route_call_name_splitter, "url": route_url_name_splitter}
 
-    def get_route(self):
-        return self.route
+    def get_parent_name_of(self, name, name_type="call"):
+        return self.splitters[name_type].join(name.split(self.splitters[name_type])[:-1])
+
+    def get_childest_name_of(self, name, name_type="call"):
+        if self.splitters[name_type] in name:
+            return self.splitters[name_type].join(name.split(self.splitters[name_type])[-1])
+        else:
+            return name
 
     def add_note_to(self, parent_name, parent_name_type, node):
-        self.get_child_branch_of(parent_name, parent_name_type)[node] = {}
+        if parent_name == "" and parent_name_type == "call":
+            self.route[node] = {}
+        else:
+            self.get_child_branch_of(parent_name, parent_name_type)[node] = {}
 
     def get_node(self, name, name_type="call"):
-        return self.get_node_and_parent_ranch(name, name_type)[0]
+        return self.get_node_and_parent_branch(name, name_type)[0]
 
     def get_parent_branch_of(self, name, name_type="call"):
         return self.get_node_and_parent_branch(name, name_type)[1]
@@ -21,6 +30,7 @@ class Route:
 
     def get_node_and_parent_branch(self, name, name_type="call"):
         names = name.split(self.splitters[name_type])
+        if name_type == "url": names.pop(0)
         current_branch = self.route
         for n in names:
             for node in current_branch:
@@ -29,6 +39,7 @@ class Route:
                         return node, current_branch
                     else:
                         current_branch = current_branch[node]
+        return None, None
 
 class Node:
     def __init__(self, call_name, url_name, page):
@@ -52,3 +63,6 @@ class Page:
             if v is None:  # GET view DNE => Say bye bye
                 return None
         return v
+
+    def __iter__(self):
+        return iter(self.__dict__)
