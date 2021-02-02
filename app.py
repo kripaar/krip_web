@@ -12,6 +12,7 @@ class App:
         self.jinja2_env = Environment(loader=FileSystemLoader(self.template_path))
         self.request_required_on_default_if_received_such_requests_types = ["POST"]
         self._routes = Route(route_call_name_splitter, route_url_name_splitter)
+        self._error_pages = {}
 
         self.jinja2_env.globals["url_for"] = self.__get_static_file_url
 
@@ -22,17 +23,19 @@ class App:
             if node := self._routes.get_node(scope["path"], "url"):
                 if (method := scope["method"]) in node.page:
                     view = node.page.get_view(method)
-                    to_give_view = {}
-                    if view.request_required or (view.request_required is None and method in self.request_required_on_default_if_received_such_requests_types):
-                        to_give_view["request"] = things.request
-                    response = await view.function(**to_give_view)
-                    await self.__process_response(response, things)
+            else:
+                page = self._error_pages.get(404)
+                if page is not None:
+                    view = page.get_view("get")
+
+            to_give_view = {}
+            if view.request_required or (view.request_required is None and method in self.request_required_on_default_if_received_such_requests_types):
+                to_give_view["request"] = things.request
+            response = await view.function(**to_give_view)
+            await self.__process_response(response, things)
 
     def route(self, new_path, name, method="get", i_want_request=None):
         def decorator(f):
-            # if self._routes.get(path) is None:
-            #     self._routes[path] = {}
-            # self._routes[path][method.upper()] = {"function": f, "request_required": i_want_request or ((method.upper() in self.request_required_on_default_if_received_such_requests_types) if i_want_request is None else False)}
             if node := self._routes.get_node(name, "call"):
                 node.page.make_view(f, method, i_want_request)
             else:
@@ -47,10 +50,10 @@ class App:
 
         return decorator
 
-    # def error_handler(self, error_status_code=404, request_required=False):
-    #     def decorator(f):
-    #         self._error_pages[error_status_code] = {"function": f, "request_required": request_required}
-    #     return decorator
+    def error_handler(self, error_status_code=404, request_required=False):
+        def decorator(f):
+            self._error_pages[error_status_code] = Page().make_view(f, "get", request_required)
+        return decorator
 
     def __get_static_file_url(self, fp):
         return self.static_url + "/" + fp
