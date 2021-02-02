@@ -17,7 +17,6 @@ class App:
         self.jinja2_env.globals["url_for"] = self.__get_static_file_url
 
     async def __call__(self, scope, receive, send):
-        print(self._routes.route)
         things = Things(scope, receive, send)
         await things.set_request_post_form()
         if scope["type"] == "http":
