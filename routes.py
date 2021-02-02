@@ -42,7 +42,11 @@ class Route:
         else:
             return None, self.route
 
+<<<<<<< HEAD
     def get_node_in_between(self, name, name_type="call", create_empty_nodes_if_needed=True):
+=======
+    def get_node_in_between(self, name, name_type="call"):
+>>>>>>> edb882c51d55640c73254d9eb17b23026a3f518b
         names = name.split(self.splitters[name_type])
         nodes = []
         if name_type == "url": names.pop(0)
@@ -51,6 +55,7 @@ class Route:
             found_node = False
             for node in current_branch:
                 if node.names[name_type] == n:
+<<<<<<< HEAD
                     found_node = True
                     nodes.append(node)
                     if node.names[name_type] != names[-1]:
@@ -69,6 +74,16 @@ class Route:
         branch = self.get_child_branch_of(namespace, "call")
 
         for node, children in route.route.items():
+=======
+                    nodes.append(node)
+                    if node.names[name_type] != names[-1]:
+                        current_branch = current_branch[node]
+        return nodes
+
+    def append_route(self, route, namespace):
+        branch = self.get_child_branch_of(namespace, "call")
+        for node, children in route.items():
+>>>>>>> edb882c51d55640c73254d9eb17b23026a3f518b
             branch[node] = children
 
 
@@ -77,9 +92,12 @@ class Node:
         self.names = {"call": call_name, "url": url_name}
         self.page = page
 
+<<<<<<< HEAD
     def __repr__(self):
         return "Node('{}', '{}')".format(*self.names.values())
 
+=======
+>>>>>>> edb882c51d55640c73254d9eb17b23026a3f518b
 
 class Page:
     class View:
