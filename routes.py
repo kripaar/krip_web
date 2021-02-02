@@ -63,21 +63,20 @@ class Route:
                 if new_node.names[name_type] != names[-1]:
                     current_branch = current_branch[node]
         return nodes
+    # 
+    # def append_route(self, route, namespace):
+    #     branch = self.get_child_branch_of(namespace, "call")
+    #
+    #     for node, children in route.route.items():
+    #         nodes.append(node)
+    #         if node.names[name_type] != names[-1]:
+    #             current_branch = current_branch[node]
+    #     return nodes
 
-    def append_route(self, route, namespace):
-        Logger("").warning(namespace)
-        branch = self.get_child_branch_of(namespace, "call")
-
-        for node, children in route.route.items():
-                    nodes.append(node)
-                    if node.names[name_type] != names[-1]:
-                        current_branch = current_branch[node]
-        return nodes
-
-    def append_route(self, route, namespace):
-        branch = self.get_child_branch_of(namespace, "call")
-        for node, children in route.items():
-            branch[node] = children
+    # def append_route(self, route, namespace):
+    #     branch = self.get_child_branch_of(namespace, "call")
+    #     for node, children in route.items():
+    #         branch[node] = children
 
 
 class Node:

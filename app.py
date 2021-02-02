@@ -37,9 +37,6 @@ class App:
 
     def route(self, new_path, name, method="get", i_want_request=None):
         def decorator(f):
-            # if self._routes.get(path) is None:
-            #     self._routes[path] = {}
-            # self._routes[path][method.upper()] = {"function": f, "request_required": i_want_request or ((method.upper() in self.request_required_on_default_if_received_such_requests_types) if i_want_request is None else False)}
             node = self._routes.get_node(name, "call")
             if node.page.get_views():  # Check if the fetched node is empty
                 node.page.make_view(f, method, i_want_request)
