@@ -46,7 +46,7 @@ class App:
                 parent_call = self._routes.get_parent_name_of(name, "call")
                 page = Page().make_view(f, method, i_want_request)
                 node = Node(self._routes.get_childest_name_of(name), path, page)
-                self._routes.add_note_to(parent_call, "call", node)
+                self._routes.add_node_to(parent_call, "call", node)
 
         return decorator
 

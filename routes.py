@@ -12,7 +12,7 @@ class Route:
         else:
             return name
 
-    def add_note_to(self, parent_name, parent_name_type, node):
+    def add_node_to(self, parent_name, parent_name_type, node):
         if parent_name == "" and parent_name_type == "call":
             self.route[node] = {}
         else:
@@ -29,22 +29,40 @@ class Route:
         return branch[node]
 
     def get_node_and_parent_branch(self, name, name_type="call"):
+        nodes = self.get_node_in_between(name, name_type)
+        if nodes:
+            branch = self.route
+            node = nodes.pop()
+            for n in nodes:
+                branch = branch[n]
+            return node, branch
+        else:
+            return None, self.route
+
+    def get_node_in_between(self, name, name_type="call"):
         names = name.split(self.splitters[name_type])
+        nodes = []
         if name_type == "url": names.pop(0)
         current_branch = self.route
         for n in names:
             for node in current_branch:
                 if node.names[name_type] == n:
-                    if node.names[name_type] == names[-1]:
-                        return node, current_branch
-                    else:
+                    nodes.append(node)
+                    if node.names[name_type] != names[-1]:
                         current_branch = current_branch[node]
-        return None, None
+        return nodes
+
+    def append_route(self, route, namespace):
+        branch = self.get_child_branch_of(namespace, "call")
+        for node, children in route.items():
+            branch[node] = children
+
 
 class Node:
     def __init__(self, call_name, url_name, page):
         self.names = {"call": call_name, "url": url_name}
         self.page = page
+
 
 class Page:
     class View:
