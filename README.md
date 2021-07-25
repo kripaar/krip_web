@@ -1,3 +1,7 @@
+***DEPRECIATED***
+This module is depreciated, no longer developed and may not work.
+Please check out the currently-in-develop module. https://github.com/VincentChui2005/kripweb
+
 # krip_web
  
 This is the website framework module made by the kripaars.<br>
